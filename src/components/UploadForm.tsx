@@ -13,12 +13,12 @@ import { ACCEPTED_PDF_TYPES, ACCEPTED_IMAGE_TYPES, DEFAULT_VOICE } from '@/lib/c
 import FileUploader from './FileUploader';
 import VoiceSelector from './VoiceSelector';
 import LoadingOverlay from './LoadingOverlay';
-import {useAuth, useUser} from "@clerk/nextjs";
+import { useAuth, useUser } from "@clerk/nextjs";
 import { toast } from 'sonner';
-import {checkBookExists, createBook, saveBookSegments} from "@/lib/actions/book.actions";
-import {useRouter} from "next/navigation";
-import {parsePDFFile} from "@/lib/utils";
-import {upload} from "@vercel/blob/client";
+import { checkBookExists, createBook, saveBookSegments } from "@/lib/actions/book.actions";
+import { useRouter } from "next/navigation";
+import { parsePDFFile } from "@/lib/utils";
+import { upload } from "@vercel/blob/client";
 
 const UploadForm = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -42,8 +42,8 @@ const UploadForm = () => {
     });
 
     const onSubmit = async (data: BookUploadFormValues) => {
-        if(!userId) {
-           return toast.error("Please login to upload books");
+        if (!userId) {
+            return toast.error("Please login to upload books");
         }
 
         setIsSubmitting(true);
@@ -53,7 +53,7 @@ const UploadForm = () => {
         try {
             const existsCheck = await checkBookExists(data.title);
 
-            if(existsCheck.exists && existsCheck.book) {
+            if (existsCheck.exists && existsCheck.book) {
                 toast.info("Book with same title already exists.");
                 form.reset()
                 router.push(`/books/${existsCheck.book.slug}`)
@@ -65,7 +65,7 @@ const UploadForm = () => {
 
             const parsedPDF = await parsePDFFile(pdfFile);
 
-            if(parsedPDF.content.length === 0) {
+            if (parsedPDF.content.length === 0) {
                 toast.error("Failed to parse PDF. Please try again with a different file.");
                 return;
             }
@@ -78,7 +78,7 @@ const UploadForm = () => {
 
             let coverUrl: string;
 
-            if(data.coverImage) {
+            if (data.coverImage) {
                 const coverFile = data.coverImage;
                 const uploadedCoverBlob = await upload(`${fileTitle}_cover.png`, coverFile, {
                     access: 'public',
@@ -109,7 +109,7 @@ const UploadForm = () => {
                 fileSize: pdfFile.size,
             });
 
-            if(!book.success) {
+            if (!book.success) {
                 toast.error(book.error as string || "Failed to create book");
                 if (book.isBillingError) {
                     router.push("/subscriptions");
@@ -117,7 +117,7 @@ const UploadForm = () => {
                 return;
             }
 
-            if(book.alreadyExists) {
+            if (book.alreadyExists) {
                 toast.info("Book with same title already exists.");
                 form.reset()
                 router.push(`/books/${book.data.slug}`)
@@ -126,7 +126,7 @@ const UploadForm = () => {
 
             const segments = await saveBookSegments(book.data._id, userId, parsedPDF.content);
 
-            if(!segments.success) {
+            if (!segments.success) {
                 toast.error("Failed to save book segments");
                 throw new Error("Failed to save book segments");
             }
